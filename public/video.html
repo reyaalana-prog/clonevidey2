@@ -12,20 +12,30 @@
     
     <style>
         /* Overlay Blokir Khusus Adblock */
-        .adblock-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.98); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; textAlign: center; }
+        .adblock-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.98); z-index: 99999; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .adblock-box { text-align: center; color: #fff; }
         .btn-adblock { margin-top: 20px; padding: 12px 25px; background: #f00; color: #fff; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
         
-        /* Box Verifikasi Konten 18+ Menyatu dengan Area Video */
-        .video-wrapper { position: relative; width: 100%; height: 100%; min-height: 400px; background: #000; border-radius: 4px; }
-        .age-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 10, 0.96); display: flex; justify-content: center; align-items: center; z-index: 100; }
+        /* Area Player */
+        .video-wrapper { position: relative; width: 100%; height: 100%; min-height: 400px; background: #000; border-radius: 4px; overflow: hidden; }
+        
+        /* 🛡️ GERBANG AWAL (Khusus mengelabui bot crawler Meta) */
+        .pre-gate-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #0c0d14; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; cursor: pointer; }
+        .play-gate-circle { width: 75px; height: 75px; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.8); border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-bottom: 18px; transition: transform 0.2s, background 0.2s; box-shadow: 0 0 20px rgba(0,0,0,0.6); }
+        .play-gate-circle i { font-size: 28px; color: #fff; margin-left: 5px; }
+        .pre-gate-overlay:hover .play-gate-circle { transform: scale(1.08); background: rgba(255, 255, 255, 0.25); }
+        .btn-gate-watch { background: #1877f2; color: #fff; border: none; border-radius: 50px; padding: 13px 30px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(24, 119, 242, 0.4); display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-gate-watch:hover { background: #1464cc; }
+
+        /* Box Verifikasi Konten 18+ (Default disembunyikan sampai tombol gerbang diklik) */
+        .age-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 10, 0.96); display: none; justify-content: center; align-items: center; z-index: 100; }
         .age-box { text-align: center; padding: 20px; color: #fff; max-width: 350px; }
         .age-box h3 { color: #ff3333; font-family: 'Poppins', sans-serif; font-size: 20px; margin-bottom: 10px; }
         .btn-verify { background: #ff3333; color: #fff; padding: 10px 24px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; margin: 5px; }
         .btn-verify-no { background: #222; color: #999; padding: 10px 24px; border: 1px solid #333; border-radius: 4px; cursor: pointer; margin: 5px; }
         
-        /* Tombol Download & Aksi Tambahan Gacor */
-        .action-area { margin-top: 20px; text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        /* Tombol Download & Aksi Tambahan (Default disembunyikan) */
+        .action-area { margin-top: 20px; text-align: center; width: 100%; display: none; flex-direction: column; align-items: center; gap: 12px; }
         .btn-download { padding: 15px 30px; font-size: 16px; background-color: #28a745; color: #fff; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; width: 100%; max-width: 400px; box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3); transition: 0.2s; text-transform: uppercase; }
         .btn-download:hover { transform: scale(1.03); background-color: #218838; }
         
@@ -71,6 +81,17 @@
                 <div class="video">
                     <div class="video-wrapper">
                         
+                        <!-- 🛡️ 1. GERBANG TUNGGAL AWAL (Pertama kali dilihat oleh bot & manusia) -->
+                        <div id="pre-gate" class="pre-gate-overlay">
+                            <div class="play-gate-circle">
+                                <i class="fa fa-play"></i>
+                            </div>
+                            <button class="btn-gate-watch">
+                                <span>Lanjutkan Menonton</span>
+                            </button>
+                        </div>
+
+                        <!-- 2. OVERLAY VERIFIKASI UMUR 18+ (Muncul setelah gerbang awal diklik) -->
                         <div id="age-verification" class="age-overlay">
                             <div class="age-box">
                                 <h3>Peringatan Konten 18+</h3>
@@ -84,7 +105,8 @@
                     </div>
                 </div>
 
-                <div class="action-area">
+                <!-- 3. TOMBOL DOWNLOAD & CARI VIDEO LAINNYA -->
+                <div id="action-area-container" class="action-area">
                     <button id="download-btn" class="btn-download">📥 DOWNLOAD VIDEO SEKARANG</button>
                     <a href="/list.html" class="btn-more-vid">🔍 Cari Video Lainnya Di Sini</a>
                 </div>
@@ -124,48 +146,53 @@
                 $('#content-page').css('filter', 'blur(15px)');
             });
 
-            // 2. MUAT SUMBER VIDEO DENGAN FITUR AUTO-FALLBACK SLICEDNIVE 🎯
-            if (videoId) {
-                var video = document.getElementById("previewVideo");
+            // 2. LOGIKA KLIK GERBANG AWAL ("Lanjutkan Menonton")
+            $('#pre-gate').on('click', function() {
+                // Sembunyikan gerbang awal
+                $('#pre-gate').fadeOut(200);
                 
-                // Coba muat dari Videy dulu
-                video.src = "https://cdn2.videy.co/" + videoId + ".mp4";
-                video.load();
+                // Tampilkan verifikasi 18+ dan tombol aksi bawah
+                $('#age-verification').css('display', 'flex').hide().fadeIn(250);
+                $('#action-area-container').css('display', 'flex').hide().fadeIn(250);
 
-                // JIKA ERROR / GAGAL LOAD DARI VIDEY, OTOMATIS SWAP KE SLICEDNIVE!
-                video.onerror = function() {
-                    console.log("Gagal muat dari Videy, mencoba otomatis dari Slicednive...");
-                    video.onerror = null; // Matikan listener agar tidak looping error
-                    video.src = "https://cdn2.slicednive.com/" + videoId + ".mp4";
+                // Baru muat sumber video CDN setelah interaksi user
+                if (videoId) {
+                    var video = document.getElementById("previewVideo");
+                    video.src = "https://cdn2.videy.co/" + videoId + ".mp4";
                     video.load();
-                };
-            }
+
+                    video.onerror = function() {
+                        video.onerror = null;
+                        video.src = "https://cdn2.slicednive.com/" + videoId + ".mp4";
+                        video.load();
+                    };
+                }
+            });
 
             // 3. SET GATE VERIFIKASI UMUR & SUNTIK DINAMIS POPUNDER UTAMA
             $('#btn-yes').on('click', function() {
-                // 🚀 KLIK PERTAMA MUTLAK: Hanya membuka 1 Smartlink tunggal (100% Lolos Crawling FB)
-                window.open('https://auctionr.org/4/843109ad1c064b8f2240ccaa317b3e02', '_blank');
+                // Klik pertama membuka Smartlink
+                window.open('https://asiaso.org/4/dbe842d527e0f424afb030e4e93b54ec', '_blank');
                 
                 $('#age-verification').fadeOut(200);
                 $('#previewVideo').removeClass('blurred');
                 document.getElementById("previewVideo").play();
 
-                // 🛡️ JEDA 3 DETIK AMAN: Injeksi script popunder Adsterra baru
+                // Suntik script popunder Adsterra setelah 3 detik pemutaran video
                 setTimeout(function() {
                     var adScript = document.createElement('script');
                     adScript.type = 'text/javascript';
                     adScript.setAttribute('data-cfasync', 'false');
-                    adScript.src = 'https://ahuramazda.org/1/f973a3d055331eb0a3d9bf1db6013486';
+                    adScript.src = 'https://ahuramazda.org/1/06585f688aa4911fc6a9619d1e28efe0';
                     document.body.appendChild(adScript);
-                    console.log("Script popunder utama Adsterra berhasil disuntikkan secara diam-diam.");
                 }, 3000);
             });
 
-            // 4. LOGIKA DOWNLOAD BERANTAI GACOR COG
+            // 4. LOGIKA DOWNLOAD BERANTAI
             localStorage.setItem('download_step', '0');
             $('#download-btn').on('click', function() {
                 let currentStep = parseInt(localStorage.getItem('download_step') || '0');
-                const linkAdstera = 'https://demper.org/4/f15d9279de29874bc6896287ca2c1471';
+                const linkAdstera = 'https://asiaso.org/4/dbe842d527e0f424afb030e4e93b54ec';
                 const affiliateLinks = ['https://s.shopee.co.id/7fUZHYXISz', 'https://s.shopee.co.id/AUokejQPcI'];
 
                 currentStep++;
@@ -177,23 +204,24 @@
                     const randomIndex = Math.floor(Math.random() * affiliateLinks.length);
                     window.open(affiliateLinks[randomIndex], '_blank');
                 } else {
-                    // Cek ketersediaan file untuk download direct
-                    window.location.href = video.src;
+                    window.location.href = document.getElementById("previewVideo").src;
                     localStorage.setItem('download_step', '0');
                 }
             });
         });
     </script>
 
-    <script type="text/javascript">var _Hasync= _Hasync|| [];
-    _Hasync.push(['Histats.start', '1,5027298,4,0,0,0,00010000']);
-    _Hasync.push(['Histats.fasi', '1']);
-    _Hasync.push(['Histats.track_hits', '']);
-    (function() {
-    var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
-    hs.src = ('//s10.histats.com/js15_as.js');
-    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
-    })();</script>
-    <noscript><a href="/" target="_blank"><img src="//sstatic1.histats.com/0.gif?5027298&101" alt="" border="0"></a></noscript>
-    </body>
+     <!-- Histats.com  START  (aync)-->
+<script type="text/javascript">var _Hasync= _Hasync|| [];
+_Hasync.push(['Histats.start', '1,5027298,4,0,0,0,00010000']);
+_Hasync.push(['Histats.fasi', '1']);
+_Hasync.push(['Histats.track_hits', '']);
+(function() {
+var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+hs.src = ('//s10.histats.com/js15_as.js');
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+})();</script>
+<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?5027298&101" alt="hit counter code" border="0"></a></noscript>
+<!-- Histats.com  END  -->
+</body>
 </html>
